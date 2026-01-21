@@ -163,11 +163,10 @@ data/raw/*.gz
 data/raw/*.zip
 data/raw/*.tar
 data/raw/*.tar.gz
-data/processed/
-*.bam
-*.bai
-*.vcf.gz
-*.vcf.gz.tbi
+data/processed/*.bam
+data/processed/*.bai
+data/processed/*.vcf.gz
+data/processed/*.vcf.gz.tbi
 
 # Large results
 results/alignments/*.delta
