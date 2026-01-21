@@ -10,8 +10,8 @@ jupyter>=1.0.0
 notebook>=6.5.0
 
 # Bioinformatic tools & libraries
-pysam>=0.21.0
-pyfaidx>=0.7.0
+# pysam>=0.21.0  # REMOVE - install via conda
+# pyfaidx>=0.7.0 # REMOVE - install via conda
 bokeh>=3.0.0
 plotly>=5.14.0
 
