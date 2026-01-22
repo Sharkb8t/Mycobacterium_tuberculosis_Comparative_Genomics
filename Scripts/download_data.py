@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Author: Dalton A. Schmidt
 GitHub: https://github.com/Sharkb8t
