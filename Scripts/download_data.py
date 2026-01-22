@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """
-Download and prepare Mycobacterium tuberculosis genome data for comparative genomics.
 Author: Dalton A. Schmidt
 GitHub: https://github.com/Sharkb8t
+
+Download and prepare Mycobacterium tuberculosis genome data for comparative genomics.
+This script downloads FASTA and GFF files for H37Rv and CDC1551 strains from NCBI.
 """
 
 import os
@@ -14,6 +16,8 @@ from pathlib import Path
 from tqdm import tqdm
 from Bio import SeqIO
 from Bio.SeqUtils import GC
+import warnings
+warnings.filterwarnings('ignore')
 
 class MTBDataDownloader:
     def __init__(self, project_root=None):

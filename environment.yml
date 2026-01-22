@@ -1,0 +1,22 @@
+name: mtb_comp_genomics
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scipy
+  - scikit-learn
+  - jupyter
+  - notebook
+  - biopython
+  - bokeh
+  - plotly
+  - tqdm
+  - requests
+  - beautifulsoup4
+  - pip
