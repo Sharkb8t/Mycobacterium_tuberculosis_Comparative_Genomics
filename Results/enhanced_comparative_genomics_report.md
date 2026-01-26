@@ -3,8 +3,8 @@
 ## Overview
 Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv and CDC1551.
 
-**Analysis Date:** 2026-01-26 11:58:50
-**Project Directory:** .
+**Analysis Date:** 2026-01-26 12:26:14
+**Project Directory:** C:\Users\dalto\Desktop\Education Resources\Personal\Projects\Mycobacterium_tuberculosis_Comparative_Genomics
 
 ## Methods
 
