@@ -1,0 +1,2 @@
+num_contigs,total_length,average_length,median_length,min_length,max_length,gc_content,n50,n75,l50,contig_names,contig_lengths
+1,4411532,4411532.0,4411532.0,4411532,4411532,0.6561466628826449,4411532,4411532,1,['NC_000962.3'],[4411532]

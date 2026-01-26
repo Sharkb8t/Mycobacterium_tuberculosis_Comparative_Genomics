@@ -1,0 +1,36 @@
+======================================================================
+MYCOBACTERIUM TUBERCULOSIS GENOME ANALYSIS REPORT
+======================================================================
+Analysis Date: 2026-01-26 11:52:51
+Project Directory: .
+
+STRAIN: H37Rv
+----------------------------------------
+Number of contigs: 1
+Total length: 4,411,532 bp
+Average contig length: 4,411,532 bp
+GC content: 0.66%
+N50: 4,411,532 bp
+N75: 4,411,532 bp
+L50: 1
+
+STRAIN: CDC1551
+----------------------------------------
+Number of contigs: 1
+Total length: 4,403,837 bp
+Average contig length: 4,403,837 bp
+GC content: 0.66%
+N50: 4,403,837 bp
+N75: 4,403,837 bp
+L50: 1
+
+COMPARISON BETWEEN STRAINS
+----------------------------------------
+H37Rv vs CDC1551:
+  Length difference: 7,695 bp
+  GC difference: 0.000%
+  Contig count difference: 0
+
+======================================================================
+END OF REPORT
+======================================================================

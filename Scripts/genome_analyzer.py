@@ -6,7 +6,7 @@ Genome analysis utilities for M. tuberculosis comparative genomics.
 Provides functions for genome statistics, GC analysis, and basic comparisons.
 """
 from Bio import SeqIO
-from Bio.SeqUtils import GC, GC_skew, molecular_weight
+from Bio.SeqUtils import gc_fraction as GC, GC_skew, molecular_weight
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -27,16 +27,26 @@ class GenomeAnalyzer:
             project_root: Path to project root directory
         """
         if project_root is None:
-            self.project_root = Path.cwd()
+        # Try to auto-detect project root
+            current_dir = Path.cwd()
+            if current_dir.name == "Scripts":
+                self.project_root = current_dir.parent
+            else:
+                self.project_root = current_dir
         else:
             self.project_root = Path(project_root)
-        
+    
+        # Resolve to absolute path
+        self.project_root = self.project_root.resolve()
+
         # Define paths
-        self.raw_dir = self.project_root / "Data" / "raw"
+        self.raw_dir = self.project_root / "Data" / "Raw"
         self.results_dir = self.project_root / "Results"
+        self.annotations_dir = self.results_dir / "Annotations"
         
         # Create results directories if they don't exist
         self.results_dir.mkdir(exist_ok=True)
+        self.annotations_dir.mkdir(exist_ok=True)
     
     def load_genome(self, strain_name: str) -> List:
         """
@@ -48,12 +58,35 @@ class GenomeAnalyzer:
         Returns:
             List of Bio.SeqRecord objects
         """
-        fasta_file = self.raw_dir / f"{strain_name}_fasta"
+        # Try multiple possible file extensions and formats
+        possible_files = [
+            self.raw_dir / f"{strain_name}_fasta.fna",
+            self.raw_dir / f"{strain_name}_fasta",
+            self.raw_dir / f"{strain_name}.fna",
+            self.raw_dir / f"{strain_name}.fasta",
+            self.raw_dir / f"{strain_name}_gbff.gbff",
+            self.raw_dir / f"{strain_name}.gbff",
+            ]
         
-        if not fasta_file.exists():
-            raise FileNotFoundError(f"FASTA file not found for {strain_name}: {fasta_file}")
+        fasta_file = None
+        for file_path in possible_files:
+            if file_path.exists():
+                fasta_file = file_path
+                break
         
-        records = list(SeqIO.parse(fasta_file, "fasta"))
+        if fasta_file is None:
+            raise FileNotFoundError(
+                f"FASTA/GBFF file not found for {strain_name}. "
+                f"Tried: {[f.name for f in possible_files]}"
+            )
+        
+        # Determine file type and parse accordingly
+        if str(fasta_file).endswith(('.gbff', '.gb', '.genbank')):
+            # Parse as GenBank file
+            records = list(SeqIO.parse(fasta_file, "genbank"))
+        else:
+            # Parse as FASTA file
+            records = list(SeqIO.parse(fasta_file, "fasta"))
         
         if not records:
             raise ValueError(f"No sequences found in {fasta_file}")
@@ -337,7 +370,7 @@ class GenomeAnalyzer:
             output_dir: Directory to save CSV files (default: Results directory)
         """
         if output_dir is None:
-            output_dir = self.results_dir
+            output_dir = self.annotations_dir
         
         output_dir.mkdir(exist_ok=True)
         
@@ -410,7 +443,7 @@ def main():
     print(report)
     
     # Save report to file
-    report_path = Path(args.output_report)
+    report_path = analyzer.annotations_dir / args.output_report
     with open(report_path, 'w') as f:
         f.write(report)
     

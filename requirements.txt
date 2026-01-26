@@ -8,10 +8,9 @@ scipy>=1.17.0
 scikit-learn>=1.8.0
 jupyter>=1.1.1
 notebook>=7.5.2
+gffutils>=0.13.0
 
 # Bioinformatic tools & libraries
-# pysam>=0.21.0  # REMOVE - install via conda
-# pyfaidx>=0.7.0 # REMOVE - install via conda
 bokeh>=3.8.1
 plotly>=6.5.2
 

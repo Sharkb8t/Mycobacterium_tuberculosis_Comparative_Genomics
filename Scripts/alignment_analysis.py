@@ -12,26 +12,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from Bio import SeqIO
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction as GC
 import warnings
 warnings.filterwarnings('ignore')
 
 class ComparativeAlignment:
     def __init__(self, project_root=None):
         if project_root is None:
-            self.project_root = Path.cwd()
+            # Try to auto-detect project root
+            current_dir = Path.cwd()
+            if current_dir.name == "Scripts":
+                self.project_root = current_dir.parent
+            else:
+                self.project_root = current_dir
         else:
             self.project_root = Path(project_root)
+    
+        # Resolve to absolute path
+        self.project_root = self.project_root.resolve()
         
         # Define paths
         self.raw_dir = self.project_root / "Data" / "Raw"
         self.results_dir = self.project_root / "Results"
         self.alignments_dir = self.results_dir / "Alignments"
         self.variants_dir = self.results_dir / "Variants"
+        self.plots_dir = self.results_dir / "Plots"
+        self.annotations_dir = self.results_dir / "Annotations"
         
         # Create directories
         self.alignments_dir.mkdir(parents=True, exist_ok=True)
         self.variants_dir.mkdir(parents=True, exist_ok=True)
+        self.plots_dir.mkdir(parents=True, exist_ok=True)
+        self.annotations_dir.mkdir(parents=True, exist_ok=True)
         
         # Load genome lengths for simulation
         self.genome_lengths = self.get_genome_lengths()
@@ -194,9 +206,8 @@ class ComparativeAlignment:
         
         for i, pos in enumerate(positions):
             # Determine variant type
-            vtype = np.random.choice(['SNP', 'SNP', 'SNP', 'SNP', 'SNP', 
-                                    'Insertion', 'Deletion', 'MNP'],
-                                    p=[0.75, 0.75, 0.75, 0.75, 0.75, 0.1, 0.09, 0.01])
+            variant_types = ['SNP', 'Insertion', 'Deletion', 'MNP']
+            vtype = np.random.choice(variant_types, p=[0.75, 0.15, 0.09, 0.01])
             
             # Define nucleotide bases
             bases = ['A', 'C', 'G', 'T']
@@ -442,10 +453,168 @@ class ComparativeAlignment:
         
         print(f"✓ Visualizations saved to: {output_file}")
     
-    def generate_report(self, alignment_stats, variant_stats):
-        """Generate comprehensive analysis report."""
+    def integrate_annotations(self, variants_df):
+        """Integrate gene annotations with variant analysis."""
+        print("\nIntegrating gene annotations...")
+        
+        try:
+            # Import AnnotationParser from the new module
+            from annotation_parser import AnnotationParser
+        except ImportError:
+            print("Warning: annotation_parser module not found. Skipping annotation integration.")
+            return variants_df
+        
+        # Initialize annotation parser
+        annotator = AnnotationParser(self.project_root)
+        
+        # Annotate variants for both strains
+        print("Annotating variants with gene information...")
+        
+        # Annotate from H37Rv perspective
+        annotated_variants_h37rv = annotator.annotate_variants(variants_df, "H37Rv")
+        
+        # Annotate from CDC1551 perspective
+        annotated_variants_cdc = annotator.annotate_variants(variants_df, "CDC1551")
+        
+        # Merge annotations
+        annotated_variants = annotated_variants_h37rv.copy()
+        annotated_variants['gene_annotation_cdc'] = annotated_variants_cdc['gene_annotation']
+        annotated_variants['gene_product_cdc'] = annotated_variants_cdc['gene_product']
+        
+        # Save annotated variants
+        output_file = self.variants_dir / "annotated_variants.csv"
+        annotated_variants.to_csv(output_file, index=False)
+        
+        print(f"✓ Annotated variants saved to: {output_file}")
+        
+        # Analyze annotated variants
+        self.analyze_annotated_variants(annotated_variants)
+        
+        return annotated_variants
+    
+    def analyze_annotated_variants(self, annotated_variants_df):
+        """Analyze variants with gene annotations."""
+        print("\nAnalyzing annotated variants...")
+        
+        if annotated_variants_df.empty:
+            print("  No annotated variants to analyze")
+            return {}
+        
+        # Calculate annotation statistics
+        total_variants = len(annotated_variants_df)
+        in_gene_variants = annotated_variants_df['in_gene_region'].sum()
+        intergenic_variants = total_variants - in_gene_variants
+        
+        # Gene-specific statistics
+        gene_variants = annotated_variants_df[annotated_variants_df['in_gene_region']]
+        
+        stats = {
+            'total_variants': total_variants,
+            'variants_in_genes': in_gene_variants,
+            'variants_intergenic': intergenic_variants,
+            'percent_in_genes': (in_gene_variants / total_variants * 100) if total_variants > 0 else 0,
+            'unique_genes_affected': gene_variants['gene_annotation'].nunique() if not gene_variants.empty else 0,
+            'average_variants_per_gene': (in_gene_variants / gene_variants['gene_annotation'].nunique()) 
+                                        if not gene_variants.empty and gene_variants['gene_annotation'].nunique() > 0 else 0
+        }
+        
+        # Print statistics
+        print(f"  Variants in gene regions: {stats['variants_in_genes']:,} ({stats['percent_in_genes']:.1f}%)")
+        print(f"  Intergenic variants: {stats['variants_intergenic']:,}")
+        print(f"  Unique genes affected: {stats['unique_genes_affected']:,}")
+        print(f"  Average variants per gene: {stats['average_variants_per_gene']:.2f}")
+        
+        # Find genes with most variants
+        if not gene_variants.empty:
+            gene_variant_counts = gene_variants['gene_annotation'].value_counts().head(10)
+            print("\n  Top 10 genes with most variants:")
+            for gene, count in gene_variant_counts.items():
+                if gene != 'Intergenic':
+                    print(f"    {gene}: {count} variants")
+        
+        # Save statistics
+        stats_df = pd.DataFrame([stats])
+        stats_df.to_csv(self.variants_dir / "annotation_statistics.csv", index=False)
+        
+        # Generate gene variant plot
+        self.create_gene_variant_plot(gene_variants)
+        
+        return stats
+    
+    def create_gene_variant_plot(self, gene_variants_df):
+        """Create visualization for gene variant analysis."""
+        if gene_variants_df.empty:
+            return
+        
+        # Set style
+        plt.style.use('seaborn-v0_8-whitegrid')
+        
+        # Create figure
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+        
+        # Plot 1: Variant distribution by gene type
+        if 'gene_type' in gene_variants_df.columns:
+            type_counts = gene_variants_df['gene_type'].value_counts()
+            axes[0].bar(type_counts.index, type_counts.values, color=['lightblue', 'lightgreen', 'salmon'])
+            axes[0].set_xlabel('Gene Type')
+            axes[0].set_ylabel('Variant Count')
+            axes[0].set_title('Variants by Gene Type')
+            axes[0].tick_params(axis='x', rotation=45)
+        
+        # Plot 2: Top 10 genes with most variants
+        top_genes = gene_variants_df['gene_annotation'].value_counts().head(10)
+        if len(top_genes) > 0:
+            axes[1].barh(range(len(top_genes)), top_genes.values)
+            axes[1].set_yticks(range(len(top_genes)))
+            axes[1].set_yticklabels(top_genes.index)
+            axes[1].set_xlabel('Variant Count')
+            axes[1].set_title('Top 10 Genes with Most Variants')
+            axes[1].invert_yaxis()
+        
+        plt.suptitle('Gene Annotation Analysis of Variants', fontsize=14, fontweight='bold')
+        plt.tight_layout()
+        
+        # Save figure
+        output_file = self.plots_dir / "gene_variant_analysis.png"
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"✓ Gene variant analysis plot saved to: {output_file}")
+
+    def generate_enhanced_report(self, alignment_stats, variant_stats, annotation_stats=None):
+        """Generate comprehensive analysis report with annotation data."""
         from datetime import datetime
         
+        # Format Ti/Tv ratio properly
+        ti_tv_ratio = variant_stats.get('ti_tv_ratio', 'N/A')
+        if isinstance(ti_tv_ratio, (int, float)):
+            ti_tv_str = f"{ti_tv_ratio:.2f}"
+        else:
+            ti_tv_str = str(ti_tv_ratio)
+
+        # Add annotation section if available
+        annotation_section = ""
+        if annotation_stats:
+            annotation_section = f"""
+### Gene Annotation Analysis
+- **Variants in gene regions:** {annotation_stats.get('variants_in_genes', 0):,} ({annotation_stats.get('percent_in_genes', 0):.1f}%)
+- **Intergenic variants:** {annotation_stats.get('variants_intergenic', 0):,}
+- **Unique genes affected:** {annotation_stats.get('unique_genes_affected', 0):,}
+- **Average variants per gene:** {annotation_stats.get('average_variants_per_gene', 0):.2f}
+
+### Annotation Insights
+
+The integration of GFF3 and GBFF annotations provides biological context to the variant analysis:
+- Identified specific genes most affected by variants
+- Provided functional annotations for variant locations
+- Enabled analysis of variant distribution across different gene types
+"""
+        else:
+            annotation_section = """
+### Gene Annotation Analysis
+*Annotation analysis was not performed in this run. Run with annotation integration enabled.*
+"""
+
         report_content = f"""# M. tuberculosis Comparative Genomics Analysis Report
 
 ## Overview
@@ -457,15 +626,16 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
 ## Methods
 
 ### Data Sources
-- H37Rv: NCBI Assembly (from Data/Raw/H37Rv_fasta.fna)
-- CDC1551: NCBI Assembly (from Data/Raw/CDC1551_fasta.fna)
+- H37Rv: FASTA, GBFF, and GFF3 files from NCBI
+- CDC1551: FASTA, GBFF, and GFF3 files from NCBI
 
 ### Analysis Pipeline
 1. Genome data acquisition and validation
 2. Basic genome statistics calculation
 3. Whole genome alignment simulation
 4. Variant identification and characterization
-5. Functional impact prediction
+5. Gene annotation parsing (GFF3/GBFF)
+6. Functional impact prediction with gene context
 
 ## Results
 
@@ -481,10 +651,9 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
 - **SNPs:** {variant_stats.get('snps', 0):,} ({variant_stats.get('snps', 0)/variant_stats.get('total_variants', 1)*100:.1f}%)
 - **Insertions:** {variant_stats.get('insertions', 0):,}
 - **Deletions:** {variant_stats.get('deletions', 0):,}
-- **Variants in genes:** {variant_stats.get('in_genes', 0):,} ({variant_stats.get('in_genes', 0)/variant_stats.get('total_variants', 1)*100:.1f}%)
-- **Ti/Tv ratio:** {variant_stats.get('ti_tv_ratio', 'N/A'):.2f if isinstance(variant_stats.get('ti_tv_ratio', 'N/A'), (int, float)) else variant_stats.get('ti_tv_ratio', 'N/A')}
-
-### Variant Impact
+- **Ti/Tv ratio:** {ti_tv_str}
+{annotation_section}
+### Variant Impact (Gene Context)
 - **Synonymous:** {variant_stats.get('synonymous', 0):,}
 - **Missense:** {variant_stats.get('missense', 0):,}
 - **Nonsense:** {variant_stats.get('nonsense', 0):,}
@@ -497,9 +666,6 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
 3. **Variant Distribution:** Most variants are SNPs, with Ti/Tv ratio consistent with purifying selection.
 4. **Functional Impact:** Majority of coding variants are synonymous, suggesting conserved protein function.
 
-## Conclusions
-The comparative analysis reveals that H37Rv and CDC1551 are highly similar at the genomic level. Differences are primarily single nucleotide polymorphisms rather than large structural rearrangements. This supports the understanding that M. tuberculosis strains maintain high genomic conservation.
-
 ## Files Generated
 
 ### Alignment Data
@@ -508,27 +674,36 @@ The comparative analysis reveals that H37Rv and CDC1551 are highly similar at th
 
 ### Variant Data
 - `simulated_variants.csv`: Variant calls with annotations
+- `annotated_variants.csv`: Variants with gene annotations
 - `variant_statistics.csv`: Variant statistics summary
+- `annotation_statistics.csv`: Gene annotation statistics
+
+### Annotation Data
+- `H37Rv_gff_annotations.csv`: Parsed GFF3 annotations for H37Rv
+- `H37Rv_gbff_annotations.csv`: Parsed GBFF annotations for H37Rv
+- `CDC1551_gff_annotations.csv`: Parsed GFF3 annotations for CDC1551
+- `CDC1551_gbff_annotations.csv`: Parsed GBFF annotations for CDC1551
 
 ### Visualizations
 - `comparative_analysis_plots.png`: 6-panel visualization of results
+- `gene_variant_analysis.png`: Gene-specific variant analysis
 
 ## Next Steps
 1. Validate findings with experimental data
-2. Perform functional enrichment analysis
+2. Perform functional enrichment analysis on affected genes
 3. Correlate genomic differences with phenotypic variations
 4. Expand analysis to include additional Mtb strains
 
 ---
-*Report generated automatically by alignment_analysis.py*
+*Report generated automatically by enhanced alignment_analysis.py*
 """
         
         # Save report
-        report_file = self.results_dir / "comparative_genomics_report.md"
+        report_file = self.results_dir / "enhanced_comparative_genomics_report.md"
         with open(report_file, 'w') as f:
             f.write(report_content)
         
-        print(f"✓ Analysis report saved to: {report_file}")
+        print(f"✓ Enhanced analysis report saved to: {report_file}")
     
     def run_complete_analysis(self):
         """Run complete comparative genomics analysis."""
@@ -548,11 +723,24 @@ The comparative analysis reveals that H37Rv and CDC1551 are highly similar at th
         # Step 4: Analyze variants
         variant_stats = self.analyze_variants(variants_df)
         
-        # Step 5: Create visualizations
+        # Step 5: Integrate annotations (NEW STEP)
+        try:
+            annotated_variants = self.integrate_annotations(variants_df)
+            annotation_stats = self.analyze_annotated_variants(annotated_variants)
+        except Exception as e:
+            print(f"\nNote: Annotation integration failed: {e}")
+            print("Continuing without annotation analysis...")
+            annotation_stats = None
+        
+        # Step 6: Create visualizations
         self.create_visualizations(alignment_df, variants_df)
         
-        # Step 6: Generate report
-        self.generate_report(alignment_stats, variant_stats)
+        # Step 7: Generate report
+        if annotation_stats:
+            self.generate_enhanced_report(alignment_stats, variant_stats, annotation_stats)
+        else:
+            # Fall back to original report
+            self.generate_report(alignment_stats, variant_stats)
         
         print("\n" + "=" * 80)
         print("ANALYSIS COMPLETE")
@@ -560,7 +748,7 @@ The comparative analysis reveals that H37Rv and CDC1551 are highly similar at th
         print(f"\nResults available in:")
         print(f"  • Alignments: {self.alignments_dir.relative_to(self.project_root)}")
         print(f"  • Variants: {self.variants_dir.relative_to(self.project_root)}")
-        print(f"  • Plots: {self.results_dir.relative_to(self.project_root)}/Plots")
+        print(f"  • Plots: {self.plots_dir.relative_to(self.project_root)}")
 
 def main():
     """Command-line interface for comparative analysis."""

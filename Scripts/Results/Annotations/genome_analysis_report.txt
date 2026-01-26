@@ -1,0 +1,13 @@
+======================================================================
+MYCOBACTERIUM TUBERCULOSIS GENOME ANALYSIS REPORT
+======================================================================
+Analysis Date: 2026-01-26 11:45:55
+Project Directory: .
+
+ERROR analyzing H37Rv: FASTA/GBFF file not found for H37Rv. Tried: ['H37Rv_fasta.fna', 'H37Rv_fasta', 'H37Rv.fna', 'H37Rv.fasta', 'H37Rv_gbff.gbff', 'H37Rv.gbff']
+
+ERROR analyzing CDC1551: FASTA/GBFF file not found for CDC1551. Tried: ['CDC1551_fasta.fna', 'CDC1551_fasta', 'CDC1551.fna', 'CDC1551.fasta', 'CDC1551_gbff.gbff', 'CDC1551.gbff']
+
+======================================================================
+END OF REPORT
+======================================================================
