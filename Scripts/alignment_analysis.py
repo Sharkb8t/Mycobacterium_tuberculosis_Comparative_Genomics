@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from Bio import SeqIO
-from Bio.SeqUtils import gc_fraction as GC
+from Bio.SeqUtils import gc_fraction
 import warnings
 warnings.filterwarnings('ignore')
 

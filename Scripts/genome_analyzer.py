@@ -6,7 +6,7 @@ Genome analysis utilities for M. tuberculosis comparative genomics.
 Provides functions for genome statistics, GC analysis, and basic comparisons.
 """
 from Bio import SeqIO
-from Bio.SeqUtils import gc_fraction as GC, GC_skew, molecular_weight
+from Bio.SeqUtils import gc_fraction, GC_skew, molecular_weight
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -110,10 +110,10 @@ class GenomeAnalyzer:
         lengths = [len(rec.seq) for rec in records]
         total_length = sum(lengths)
         
-        # Calculate GC content
+        # Calculate GC content using the proper function name
         gc_total = 0
         for rec in records:
-            gc_total += GC(rec.seq) * len(rec.seq)
+            gc_total += gc_fraction(rec.seq) * len(rec.seq)
         gc_content = gc_total / total_length
         
         # Sort lengths for N50 calculation
