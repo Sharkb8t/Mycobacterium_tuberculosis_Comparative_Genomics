@@ -1,7 +1,7 @@
 ======================================================================
 MYCOBACTERIUM TUBERCULOSIS GENOME ANALYSIS REPORT
 ======================================================================
-Analysis Date: 2026-01-26 12:27:27
+Analysis Date: 2026-01-30 13:11:18
 Project Directory: C:\Users\dalto\Desktop\Education Resources\Personal\Projects\Mycobacterium_tuberculosis_Comparative_Genomics
 
 STRAIN: H37Rv
