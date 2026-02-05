@@ -17,15 +17,16 @@ A comprehensive bioinformatics pipeline for comparative genomics analysis of Myc
 - **Reproducible**: Conda environment and requirements specification
 
 ## 🏗️ Project Structure
----
+
+```
 Mycobacterium_tuberculosis_Comparative_Genomics
 │
-├── README.md # This file
+├── README.md
 ├── LICENSE
 ├── .gitignore
 │
 ├── Data/
-│ ├── Raw/ # Original genome files (FASTA, GBFF, & GFF3 formats)
+│ ├── Raw/                      # Original genome files (FASTA, GBFF, & GFF3 formats)
 │ │ ├── CDC1551_fasta.fna
 │ │ ├── CDC1551_gbff.gbff
 │ │ ├── CDC1551_gff.gff
@@ -35,32 +36,32 @@ Mycobacterium_tuberculosis_Comparative_Genomics
 │ │
 │ └── Processed/ # Cleaned/processed data
 │
-├── Notebooks/ # Jupyter notebooks
+├── Notebooks/                 # Jupyter notebooks
 │ ├── 01_Data_Acquisition.ipynb
 │ ├── 02_Genome_Statistics.ipynb
 │ └── 03_Comparative_Analysis.ipynb
 │
-├── Scripts/ # Python scripts
-│ ├── download_data.py # Download genome data from NCBI
-│ ├── genome_analyzer.py # Genome statistics and analysis
-│ ├── annotation_parser.py # Parse GFF3 and GBFF annotations
-│ ├── alignment_analysis.py # Comparative alignment and variant analysis
-│ └── integrated_analysis.py # Complete analysis pipeline
+├── Scripts/                   # Python scripts
+│ ├── download_data.py         # Download genome data from NCBI
+│ ├── genome_analyzer.py       # Genome statistics and analysis
+│ ├── annotation_parser.py     # Parse GFF3 and GBFF annotations
+│ ├── alignment_analysis.py    # Comparative alignment and variant analysis
+│ └── integrated_analysis.py   # Complete analysis pipeline
 │
-├── Results/ # Analysis outputs (generated during analysis)
-│ ├── Alignments/ # Alignment coordinates and statistics
-│ ├── Annotations/ # Parsed gene annotations
-│ ├── Variants/ # Variant calls and statistics
-│ ├── Plots/ # Visualization files
-│ └── Reports/ # Comprehensive analysis reports
+├── Results/                   # Analysis outputs (generated during analysis)
+│ ├── Alignments/              # Alignment coordinates and statistics
+│ ├── Annotations/             # Parsed gene annotations
+│ ├── Variants/                # Variant calls and statistics
+│ ├── Plots/                   # Visualization files
+│ └── Reports/                 # Comprehensive analysis reports
 │
 ├── Documentation/
-│ ├── methods.md # Detailed methodology
-│ └── references.bib # Bibliography
+│ ├── methods.md               # Detailed methodology
+│ └── references.bib           # Bibliography
 │
-├── environment.yml # Conda environment specification
-└── requirements.txt # Python package requirements
----
+├── environment.yml            # Conda environment specification
+└── requirements.txt           # Python package requirements
+```
 
 ## 🚀 Quick Start
 
@@ -72,6 +73,7 @@ Mycobacterium_tuberculosis_Comparative_Genomics
 ### 2. Installation
 
 **Using Conda (recommended):**
+
 ```bash
 # Clone the repository
 git clone https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics.git
@@ -83,6 +85,7 @@ conda activate mtb_comp_genomics
 ```
 
 **Using pip**
+
 ```bash
 # Clone the repository
 git clone https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics.git
@@ -93,10 +96,12 @@ pip install -r requirements.txt
 ```
 
 ### 3. Download Data
+
 ```bash
 # Run from the project root directory
 python Scripts/download_data.py
 ```
+
 This will download the following files if not downloaded from the project directory:
 
 - H37Rv and CDC1551 FASTA files
@@ -104,6 +109,7 @@ This will download the following files if not downloaded from the project direct
 - GBFF (GenBank) annotation files
 
 ### 4. Run Complete Analysis Pipeline
+
 ```bash
 # Run integrated analysis (recommended for first-time users)
 python Scripts/integrated_analysis.py
@@ -112,6 +118,7 @@ python Scripts/integrated_analysis.py
 ## 📊 Analysis Pipeline
 
 ### Phase 1: Data Acquisition & Genome Statistics
+
 ```bash
 # Download genome data
 python Scripts/download_data.py
@@ -119,6 +126,7 @@ python Scripts/download_data.py
 # Analyze genome characteristics
 python Scripts/genome_analyzer.py --strains H37Rv CDC1551 --save-csv
 ```
+
 **Outputs:**
 
 - Genome length, GC content, contig statistics
@@ -126,10 +134,12 @@ python Scripts/genome_analyzer.py --strains H37Rv CDC1551 --save-csv
 - Comparative genome statistics
 
 ### Phase 2: Gene Annotation Analysis
+
 ```bash
 # Parse and analyze gene annotations
 python Scripts/annotation_parser.py --strains H37Rv CDC1551 --parse-all --compare
 ```
+
 **Outputs**
 
 - Parsed GFF3 and GBFF annotations
@@ -137,10 +147,12 @@ python Scripts/annotation_parser.py --strains H37Rv CDC1551 --parse-all --compar
 - Gene content comparison between strains 
 
 ### Phase 3: Comparative Genomics
+
 ```bash
 # Run comparative alignment and variant analysis
 python Scripts/alignment_analysis.py
 ```
+
 **Outputs**
 
 - Simulated whole genome alignments
@@ -149,10 +161,12 @@ python Scripts/alignment_analysis.py
 - Comprehensive visualizations
 
 ### Phase 4: Integrated Analysis
+
 ```bash
 # Run complete pipeline with single command
 python Scripts/integrated_analysis.py --strains H37Rv CDC1551
 ```
+
 **Outputs**
 
 - Master analysis report (`Results/integrated_analysis_report.md`)
@@ -218,31 +232,41 @@ jupyter notebook
 ## 🛠️ Script Documentation
 
 ### download_data.py
+
 Downloads M. tuberculosis genome data for the CDC1551 & H37RV strains, from NCBI RefSeq.
+
 ```bash
 python Scripts/download_data.py [--project-root PATH]
 ```
 
 ### genome_analyzer.py
+
 Analyzes genomes sequences for bacteria strains in the `Raw/` directory.
+
 ```bash
 python Scripts/genome_analyzer.py [--project-root PATH] [--strains H37Rv CDC1551] [--save-csv]
 ```
 
 ### annotation_parser.py
+
 Parses GFF3 and GBFF annotation files for data analysis.
+
 ```bash
 python Scripts/annotation_parser.py [--project-root PATH] [--strains H37Rv CDC1551] [--parse-all] [--compare]
 ```
 
 ### alignment_analysis.py
+
 Performs comparative alignment and variant analysis on parsed genome data.
+
 ```bash
 python Scripts/alignment_analysis.py [--project-dir PATH]
 ```
 
 ### integrated_analysis.py
+
 This file will completely run the analysis pipeline in one command.
+
 ```bash
 python Scripts/integrated_analysis.py [--project-dir PATH] [--strains H37Rv CDC1551]
 ```
@@ -250,6 +274,7 @@ python Scripts/integrated_analysis.py [--project-dir PATH] [--strains H37Rv CDC1
 ## 🧪 Dependencies
 
 Core dependencies (see `requirements.txt` for complete list):
+
 - **Biopython** (≥1.86): Biological sequence analysis
 - **NumPy** (≥2.4.1): Numerical computing
 - **pandas** (≥2.3.3): Data manipulation
@@ -259,9 +284,11 @@ Core dependencies (see `requirements.txt` for complete list):
 - **gffutils** (≥0.13.0): GFF3 file parsing
 
 ## 📝 Output Files
+
+```
 Mycobacterium_tuberculosis_Comparative_Genomics/
 │
-└── Results/              # Analysis outputs
+└── Results/
    ├── Alignments/
    │   ├── alignment_statistics.csv
    │   └── simulated_alignment_coordinates.csv
@@ -298,6 +325,7 @@ Mycobacterium_tuberculosis_Comparative_Genomics/
    ├── genome_comparison_stats.csv
    ├── h37rv_sliding_window.csv
    └── custom_analysis_summary.csv
+```
 
 ## 🎯 Biological Significance
 
@@ -317,6 +345,7 @@ This project addresses key questions in M. tuberculosis genomics:
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow PEP 8 style guide for Python code
 - Add docstrings to all functions and classes
 - Include tests for new functionality
