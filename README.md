@@ -1,3 +1,4 @@
+---
 # Mycobacterium tuberculosis Comparative Genomics
 
 [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
@@ -5,6 +6,8 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics)
 
 A comprehensive bioinformatics pipeline for comparative genomics analysis of Mycobacterium tuberculosis strains H37Rv and CDC1551. This project integrates genome sequence analysis, gene annotation parsing, and variant calling to study genomic diversity and evolution in tuberculosis pathogens.
+
+
 
 ## 📋 Features
 
@@ -18,7 +21,7 @@ A comprehensive bioinformatics pipeline for comparative genomics analysis of Myc
 
 ## 🏗️ Project Structure
 
-```
+```md
 Mycobacterium_tuberculosis_Comparative_Genomics
 │
 ├── README.md
@@ -206,6 +209,12 @@ python Scripts/integrated_analysis.py --strains H37Rv CDC1551
 
 ### Genome Comparison Statistics
 
+|  | H37Rv | CDC1551 | Difference |
+|--------|-------|---------|------------|
+| Genome Length | 4,411,532 bp | 4,403,837 bp | 7,695 bp |
+| GC Content | 65.6% | 65.6% | 0.0% |
+| Gene Count | ~4,000 | ~4,000 | < 100 |
+| Coding % | ~90% | ~90% | Similar |
 
 ### Variant Analysis
 
@@ -218,11 +227,13 @@ python Scripts/integrated_analysis.py --strains H37Rv CDC1551
 ## 📖 Jupyter Notebooks
 
 The project includes three interactive notebooks for step-by-step analysis:
+
 1. `01_Data_Acquisition.ipynb` - Download and validate genome data
 2. `02_Genome_Statistics.ipynb` - Calculate and visualize genome statistics
 3. `03_Comparative_Analysis.ipynb` - Perform comparative genomics analysis
 
 To use the notebooks, be sure to launch Jupyter Notebook through the installed desktop application or via bash:
+
 ```bash
 # Launch Jupyter
 jupyter notebook
@@ -285,7 +296,7 @@ Core dependencies (see `requirements.txt` for complete list):
 
 ## 📝 Output Files
 
-```
+```md
 Mycobacterium_tuberculosis_Comparative_Genomics/
 │
 └── Results/
@@ -353,7 +364,7 @@ This project addresses key questions in M. tuberculosis genomics:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE]([https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics?tab=MIT-1-ov-file#readme](https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics/blob/main/LICENSE)) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -362,3 +373,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **Open source community** for numerous scientific Python packages
 
 ## 📧 Contact
+
+**Author:** [Dalton A. Schmidt]()
+**GitHub:** [Sharkb8t](https://github.com/Sharkb8t)
+**Project:** [Mycobacterium_tuberculosis_Comparative_Genomics](https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics)
+
+## 📖 References
+
+For all key references used in this project's construction please see the `references.bib` file located within the `Documentation` directory.
+
+---
+
+*This project is intended for educational and demonstrative purposes. Always verify results with documented experimental data.*
