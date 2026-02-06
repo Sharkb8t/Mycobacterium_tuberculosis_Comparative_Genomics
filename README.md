@@ -229,8 +229,14 @@ python Scripts/integrated_analysis.py --strains H37Rv CDC1551
 The project includes three interactive notebooks for step-by-step analysis:
 
 1. `01_Data_Acquisition.ipynb` - Download and validate genome data
+   
+
 2. `02_Genome_Statistics.ipynb` - Calculate and visualize genome statistics
+
+   
 3. `03_Comparative_Analysis.ipynb` - Perform comparative genomics analysis
+   
+   
 
 To use the notebooks, be sure to launch Jupyter Notebook through the installed desktop application or via bash:
 
