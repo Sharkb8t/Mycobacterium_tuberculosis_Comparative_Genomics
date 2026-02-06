@@ -70,7 +70,7 @@ Mycobacterium_tuberculosis_Comparative_Genomics
 
 ### 1. Prerequisites
 
-- Python 3.8 or higher
+- Python 3.14 or higher
 - Conda (recommended) or pip
 
 ### 2. Installation
