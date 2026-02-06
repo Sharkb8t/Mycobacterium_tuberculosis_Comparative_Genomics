@@ -381,7 +381,9 @@ This project is licensed under the MIT License - see the [LICENSE]([https://gith
 ## 📧 Contact
 
 **Author:** [Dalton A. Schmidt]()
+
 **GitHub:** [Sharkb8t](https://github.com/Sharkb8t)
+
 **Project:** [Mycobacterium_tuberculosis_Comparative_Genomics](https://github.com/Sharkb8t/Mycobacterium_tuberculosis_Comparative_Genomics)
 
 ## 📖 References
