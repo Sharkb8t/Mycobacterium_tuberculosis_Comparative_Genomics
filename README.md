@@ -292,13 +292,13 @@ python Scripts/integrated_analysis.py [--project-dir PATH] [--strains H37Rv CDC1
 
 Core dependencies (see `requirements.txt` for complete list):
 
-- **Biopython** (≥1.86): Biological sequence analysis
-- **NumPy** (≥2.4.1): Numerical computing
-- **pandas** (≥2.3.3): Data manipulation
-- **matplotlib** (≥3.10.8) & seaborn (≥0.13.2): Visualization
-- **scikit-learn** (≥1.8.0): Machine learning utilities
-- **Jupyter** (≥1.1.1): Interactive notebooks
-- **gffutils** (≥0.13.0): GFF3 file parsing
+- [**Biopython**](https://biopython.org/wiki/Download) (≥1.86): Biological sequence analysis
+- [**NumPy**](https://numpy.org/doc/stable/user/index.html) (≥2.4.1): Numerical computing
+- [**pandas**](https://pandas.pydata.org/docs/getting_started/index.html) (≥2.3.3): Data manipulation
+- [**matplotlib**](https://matplotlib.org/stable/index.html) (≥3.10.8) & [**seaborn**](https://seaborn.pydata.org/) (≥0.13.2): Visualization
+- [**scikit-learn**](https://scikit-learn.org/stable/user_guide.html) (≥1.8.0): Machine learning utilities
+- [**Jupyter**](https://docs.jupyter.org/en/latest/use/using.html) (≥1.1.1): Interactive notebooks
+- [**gffutils**](https://daler.github.io/gffutils/) (≥0.13.0): GFF3 file parsing
 
 ## 📝 Output Files
 
@@ -390,4 +390,4 @@ For all key references used in this project's construction please see the `refer
 
 ---
 
-*This project is intended for educational and demonstrative purposes. Always verify results with documented experimental data.*
+*This project is intended for educational and demonstrative purposes. Always verify results with documented & experimental data.*
