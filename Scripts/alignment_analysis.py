@@ -3,7 +3,8 @@ Author: Dalton A. Schmidt
 GitHub: https://github.com/Sharkb8t
 
 Comparative genomics alignment analysis for Mycobacterium tuberculosis strains.
-Performs whole genome alignment simulation and variant calling between H37Rv and CDC1551.
+
+This scipt performs whole genome alignment simulation and variant calling between H37Rv and CDC1551 strains. It specifically contains functionality for alignment analysis, variant simulation, annotation integration, and visualization.
 """
 import sys
 from pathlib import Path
@@ -17,7 +18,32 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class ComparativeAlignment:
+    """
+    Main class for comparative genomics alignment analysis.
+
+    This class simulates whole genome alignments, analyzes variants, integrates gene annotations, and generates comprehensive reports and visualizations.
+
+    Attributes:
+        project_root (Path): Root directory of the project.
+        raw_dir (Path): Directory for raw data files.
+        results_dir (Path): Directory for storing results.
+        alignments_dir (Path): Directory for alignment results.
+        variants_dir (Path): Directory for variant results.
+        plots_dir (Path): Directory for plots.
+        annotations_dir (Path): Directory for annotation results.
+        genome_lengths (dict): Dictionary storing genome lengths for strains.
+    """
     def __init__(self, project_root=None):
+        """
+        Initialize the ComparativeAlignment object.
+        
+        Args:
+            project_root (str or Path, optional): Path to the project root directory.
+                If None, attempts to auto-detect based on current working directory.
+        
+        Raises:
+            FileNotFoundError: If required directories or raw data files are missing.
+        """
         if project_root is None:
             # Try to auto-detect project root
             current_dir = Path.cwd()
@@ -49,7 +75,15 @@ class ComparativeAlignment:
         self.genome_lengths = self.get_genome_lengths()
     
     def get_genome_lengths(self):
-        """Get actual genome lengths from FASTA files."""
+        """
+        Retrieve actual genome lengths from FASTA files.
+
+        Attempts to parse FASTA files for H37Rv and CDC1551 strains to get accurate genome lengths. Falls back to approximate lengths if files are not found.
+
+        Returns:
+            dict: Dictionary with strain names as keys and genome lengths as values.
+                Example: {'H37Rv': 4411532, 'CDC1551': 4403837}
+        """
         lengths = {}
         strains = ["H37Rv", "CDC1551"]
         
@@ -71,7 +105,27 @@ class ComparativeAlignment:
         return lengths
     
     def simulate_alignment(self):
-        """Simulate whole genome alignment for demonstration."""
+        """
+        Simulate whole genome alignment for demonstration.
+        
+        Generates realistic alignment blocks with properties similar to actual M. tuberculosis genome alignments. This simulation is used when actual alignment tools (like MUMmer4) are not available.
+        
+        Returns:
+            pandas.DataFrame: DataFrame containing simulated alignment blocks with columns:
+                - block_id: Unique identifier for the alignment block
+                - ref_start: Start position in the reference genome (H37Rv)
+                - ref_end: End position in the reference genome (H37Rv)
+                - query_start: Start position in the query genome (CDC1551)
+                - query_end: End position in the query genome (CDC1551)
+                - ref_length: Length of the aligned block in the reference genome
+                - query_length: Length of the aligned block in the query genome
+                - identity: Percentage identity of the aligned block
+                - ref_id: Identifier for the reference genome (H37Rv)
+                - query_id: Identifier for the query genome (CDC1551)
+
+        Note:
+            In a product environment, this should be replaced with actual alignment results from tools like MUMmer4 or BLAST.
+        """
         print("Simulating whole genome alignment...")
         print("Note: In a real analysis, you would use MUMmer4 or similar tools")
         
@@ -148,7 +202,25 @@ class ComparativeAlignment:
         return df
     
     def analyze_alignment(self, alignment_df):
-        """Analyze alignment data and generate statistics."""
+        """
+        Analyze alignment data and generate statistics.
+        
+        Args:
+            alignment_df (pandas.DataFrame): DataFrame containing alignment blocks with columns:
+                - block_id: Unique identifier for the alignment blocks
+        
+        Returns:
+            dicts: Dictionary containing alignment statistics including:
+                - total_aligned_bp: Total number of bases aligned
+                - h37rv_coverage: Percentage of H37Rv genome covered by alignments
+                - cdc1551_coverage: Percentage of CDC1551 genome covered by alignments
+                - num_blocks: Total number of alignment blocks
+                - mean_identity: Average identity percentage across all blocks
+                - median_identity: Median identity percentage across all blocks
+                - mean_block_size: Average size of alignment blocks in base pairs
+                - max_block_size: Maximum size of alignment blocks in base pairs
+                - min_block_size: Minimum size of alignment blocks in base pairs
+        """
         print("\nAnalyzing alignment statistics...")
         
         if alignment_df.empty:
@@ -186,7 +258,24 @@ class ComparativeAlignment:
         return stats
     
     def simulate_variants(self):
-        """Simulate genomic variants between strains."""
+        """
+        Simulate genomic variants between strains.
+        
+        Generates realistic variants including SNPs, insertions, deletions, and multi-nucleotide polymorphisms (MNPs) based on typical variant distributions in M. tuberculosis strains.
+        
+        Returns:
+            pandas.DataFrame: DataFrame containing simulated variants with columns:
+                - position: Genomic position
+                - variant_id: Unique variant identifier
+                - type: Variant type (SNP, Insertion, Deletion, MNP)
+                - ref: Reference allele
+                - alt: Alternative allele
+                - length: Length of variant
+                - in_gene: Boolean indicating if variant is in a gene region
+                - impact: Functional impact (Synonymous, Missense, Nonsense, Intergenic)
+                - quality: Variant quality score
+                - filter: Filter status
+        """
         print("\nSimulating genomic variants...")
         
         np.random.seed(42)
@@ -278,7 +367,30 @@ class ComparativeAlignment:
         return df
     
     def analyze_variants(self, variants_df):
-        """Analyze variant data and generate statistics."""
+        """
+        Analyze variant data and generate comprehensive statistics.
+        
+        Calculates variant type distributions, functional impacts, and transition/transversion ratios.
+        
+        Args:
+            variants_df (pandas.DataFrame): DataFrame containing variant data.
+            
+        Returns:
+            dict: Dictionary containing variant statistics including:
+                - total_variants: Total number of variants
+                - snps: Number of single nucleotide polymorphisms
+                - insertions: Number of insertions
+                - deletions: Number of deletions
+                - mnps: Number of multi-nucleotide polymorphisms
+                - in_genes: Number of variants in gene regions
+                - synonymous: Number of synonymous variants
+                - missense: Number of missense variants
+                - nonsense: Number of nonsense variants
+                - intergenic: Number of intergenic variants
+                - snps_percent: Percentage of variants that are SNPs
+                - in_genes_percent: Percentage of variants in gene regions
+                - ti_tv_ratio: Transition/transversion ratio
+        """
         print("\nAnalyzing variant statistics...")
         
         if variants_df.empty:
@@ -341,7 +453,21 @@ class ComparativeAlignment:
         return stats
     
     def create_visualizations(self, alignment_df, variants_df):
-        """Create visualizations for alignment and variant analysis."""
+        """
+        Create comprehensive visualizations for alignment and variant analysis.
+        
+        Generates a 6-panel figure containing:
+        1. Alignment dot plot
+        2. Alignment identity distribution
+        3. Alignment block size distribution
+        4. Variant type distribution
+        5. Variant impact distribution
+        6. Variant density along genome
+        
+        Args:
+            alignment_df (pandas.DataFrame): DataFrame containing alignment data.
+            variants_df (pandas.DataFrame): DataFrame containing variant data.
+        """
         print("\nCreating visualizations...")
         
         # Create plots directory
@@ -454,7 +580,22 @@ class ComparativeAlignment:
         print(f"✓ Visualizations saved to: {output_file}")
     
     def integrate_annotations(self, variants_df):
-        """Integrate gene annotations with variant analysis."""
+        """
+        Integrate gene annotations with variant analysis.
+        
+        Uses AnnotationParser to annotate variants with gene information
+        from GFF3 and GBFF files for both H37Rv and CDC1551 strains.
+        
+        Args:
+            variants_df (pandas.DataFrame): DataFrame containing variant data.
+            
+        Returns:
+            pandas.DataFrame: Annotated variant DataFrame with additional columns:
+                - gene_annotation: Gene name for H37Rv
+                - gene_product: Gene product for H37Rv
+                - gene_annotation_cdc: Gene name for CDC1551
+                - gene_product_cdc: Gene product for CDC1551
+        """
         print("\nIntegrating gene annotations...")
         
         try:
@@ -493,7 +634,24 @@ class ComparativeAlignment:
         return annotated_variants
     
     def analyze_annotated_variants(self, annotated_variants_df):
-        """Analyze variants with gene annotations."""
+        """
+        Analyze variants with gene annotations to identify patterns.
+        
+        Calculates statistics on gene-affected variants, identifies genes
+        with the most variants, and generates gene-specific analyses.
+        
+        Args:
+            annotated_variants_df (pandas.DataFrame): DataFrame containing annotated variants.
+            
+        Returns:
+            dict: Dictionary containing annotation statistics including:
+                - total_variants: Total number of variants
+                - variants_in_genes: Number of variants in gene regions
+                - variants_intergenic: Number of intergenic variants
+                - percent_in_genes: Percentage of variants in gene regions
+                - unique_genes_affected: Number of unique genes affected
+                - average_variants_per_gene: Average variants per affected gene
+        """
         print("\nAnalyzing annotated variants...")
         
         if annotated_variants_df.empty:
@@ -542,7 +700,16 @@ class ComparativeAlignment:
         return stats
     
     def create_gene_variant_plot(self, gene_variants_df):
-        """Create visualization for gene variant analysis."""
+        """
+        Create visualization for gene variant analysis.
+        
+        Generates a 2-panel figure showing:
+        1. Variant distribution by gene type
+        2. Top 10 genes with most variants
+        
+        Args:
+            gene_variants_df (pandas.DataFrame): DataFrame containing gene-specific variant data.
+        """
         if gene_variants_df.empty:
             return
         
@@ -582,7 +749,17 @@ class ComparativeAlignment:
         print(f"✓ Gene variant analysis plot saved to: {output_file}")
 
     def generate_enhanced_report(self, alignment_stats, variant_stats, annotation_stats=None):
-        """Generate comprehensive analysis report with annotation data."""
+        """
+        Generate comprehensive analysis report with annotation data.
+        
+        Creates a detailed markdown report containing all analysis results,
+        methods, and biological interpretations.
+        
+        Args:
+            alignment_stats (dict): Dictionary containing alignment statistics.
+            variant_stats (dict): Dictionary containing variant statistics.
+            annotation_stats (dict, optional): Dictionary containing annotation statistics.
+        """
         from datetime import datetime
         
         # Format Ti/Tv ratio properly
@@ -706,7 +883,18 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
         print(f"✓ Enhanced analysis report saved to: {report_file}")
     
     def run_complete_analysis(self):
-        """Run complete comparative genomics analysis."""
+        """
+        Run complete comparative genomics analysis pipeline.
+        
+        Executes all analysis steps in sequence:
+        1. Simulate alignment
+        2. Analyze alignment statistics
+        3. Simulate variants
+        4. Analyze variant statistics
+        5. Integrate annotations (if available)
+        6. Create visualizations
+        7. Generate comprehensive report
+        """
         print("=" * 80)
         print("M. TUBERCULOSIS COMPARATIVE GENOMICS ANALYSIS")
         print("=" * 80)
@@ -736,11 +924,7 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
         self.create_visualizations(alignment_df, variants_df)
         
         # Step 7: Generate report
-        if annotation_stats:
-            self.generate_enhanced_report(alignment_stats, variant_stats, annotation_stats)
-        else:
-            # Fall back to original report
-            self.generate_report(alignment_stats, variant_stats)
+        self.generate_enhanced_report(alignment_stats, variant_stats, annotation_stats)
         
         print("\n" + "=" * 80)
         print("ANALYSIS COMPLETE")
@@ -751,7 +935,12 @@ Comparative genomics analysis between Mycobacterium tuberculosis strains H37Rv a
         print(f"  • Plots: {self.plots_dir.relative_to(self.project_root)}")
 
 def main():
-    """Command-line interface for comparative analysis."""
+    """
+    Command-line interface for comparative analysis.
+    
+    Usage:
+        python alignment_analysis.py [--project-dir PROJECT_DIR]
+    """
     import argparse
     
     parser = argparse.ArgumentParser(

@@ -17,14 +17,30 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class GenomeAnalyzer:
-    """Analyze genome sequences and generate comparative statistics."""
+    """
+    Analyze genome sequences and generate comparative statistics.
+    
+    This class provides comprehensive genome analysis capabilities including:
+    - Loading and parsing genome sequences from FASTA and GenBank files
+    - Calculating basic genome statistics (length, GC content, N50, etc.)
+    - Performing sliding window analyses of sequence properties
+    - Calculating dinucleotide frequencies and biases
+    - Comparing genomes between different strains
+    
+    Attributes:
+        project_root (Path): Root directory of the project.
+        raw_dir (Path): Directory containing raw data files.
+        results_dir (Path): Directory for storing analysis results.
+        annotations_dir (Path): Directory for annotation files.
+    """
     
     def __init__(self, project_root: Optional[Path] = None):
         """
         Initialize the genome analyzer.
         
         Args:
-            project_root: Path to project root directory
+            project_root: Path to project root directory. If None, attempts
+                to auto-detect project root.
         """
         if project_root is None:
         # Try to auto-detect project root
@@ -50,13 +66,22 @@ class GenomeAnalyzer:
     
     def load_genome(self, strain_name: str) -> List:
         """
-        Load genome sequences for a strain.
+        Load genome sequences for a strain from various file formats.
+        
+        Attempts to load genome data from multiple possible file formats
+        and naming conventions in this order:
+        1. FASTA files with standard extensions (.fna, .fasta)
+        2. GenBank files (.gbff, .gb, .genbank)
         
         Args:
-            strain_name: Name of the strain (e.g., "H37Rv")
+            strain_name: Name of the strain (e.g., "H37Rv", "CDC1551")
         
         Returns:
-            List of Bio.SeqRecord objects
+            List of Bio.SeqRecord objects containing the genome sequences.
+            
+        Raises:
+            FileNotFoundError: If no genome file can be found for the strain.
+            ValueError: If the found file contains no sequences.
         """
         # Try multiple possible file extensions and formats
         possible_files = [
@@ -95,13 +120,30 @@ class GenomeAnalyzer:
     
     def calculate_basic_stats(self, records: List) -> Dict:
         """
-        Calculate basic genome statistics.
+        Calculate comprehensive basic genome statistics.
+        
+        Computes metrics commonly used in genome analysis including:
+        - Contig count and lengths
+        - GC content
+        - Assembly quality metrics (N50, N75, L50)
         
         Args:
-            records: List of Bio.SeqRecord objects
+            records: List of Bio.SeqRecord objects from load_genome()
         
         Returns:
-            Dictionary with genome statistics
+            Dictionary with genome statistics containing:
+                - num_contigs: Number of contigs/scaffolds
+                - total_length: Total genome length in bp
+                - average_length: Average contig length
+                - median_length: Median contig length
+                - min_length: Minimum contig length
+                - max_length: Maximum contig length
+                - gc_content: GC content as percentage
+                - n50: N50 statistic (contig length such that 50% of genome is in contigs of this size or larger)
+                - n75: N75 statistic
+                - l50: L50 statistic (number of contigs that make up 50% of genome length)
+                - contig_names: List of contig identifiers
+                - contig_lengths: List of contig lengths
         """
         if not records:
             return {}
@@ -152,14 +194,29 @@ class GenomeAnalyzer:
     
     def calculate_sliding_window_stats(self, sequence: str, window_size: int = 1000) -> pd.DataFrame:
         """
-        Calculate sliding window statistics for a genome sequence.
+        Calculate sliding window statistics across a genome sequence.
+        
+        Computes various sequence properties in non-overlapping windows:
+        - GC content
+        - GC skew ((G-C)/(G+C))
+        - AT skew ((A-T)/(A+T))
+        - Individual nucleotide frequencies
         
         Args:
             sequence: DNA sequence as string
-            window_size: Size of sliding window
+            window_size: Size of sliding window in base pairs (default: 1000)
         
         Returns:
-            DataFrame with window statistics
+            DataFrame with window statistics containing columns:
+                - position: Start position of window (0-based)
+                - gc_content: GC content in percentage
+                - gc_skew: GC skew value (-1 to 1)
+                - at_skew: AT skew value (-1 to 1)
+                - a_content: A frequency in percentage
+                - c_content: C frequency in percentage
+                - g_content: G frequency in percentage
+                - t_content: T frequency in percentage
+                - n_content: N (ambiguous) frequency in percentage
         """
         sequence = sequence.upper()
         data = []
@@ -214,13 +271,22 @@ class GenomeAnalyzer:
     
     def calculate_dinucleotide_frequencies(self, sequence: str) -> pd.DataFrame:
         """
-        Calculate dinucleotide frequencies in a genome.
+        Calculate dinucleotide frequencies and biases in a genome.
+        
+        Computes observed and expected frequencies for all 16 dinucleotide
+        combinations, and calculates odds ratios to identify over- or
+        under-represented dinucleotides.
         
         Args:
             sequence: DNA sequence as string
         
         Returns:
-            DataFrame with dinucleotide frequencies
+            DataFrame with dinucleotide statistics containing columns:
+                - dinucleotide: 2-letter dinucleotide (AA, AC, AG, etc.)
+                - frequency: Observed frequency (0-1)
+                - count: Observed count
+                - expected_frequency: Expected frequency based on mononucleotide frequencies
+                - odds_ratio: Ratio of observed to expected frequency
         """
         sequence = sequence.upper()
         nucleotides = ['A', 'C', 'G', 'T']
@@ -266,12 +332,24 @@ class GenomeAnalyzer:
         """
         Compare two genomes and calculate differences.
         
+        Computes comparative metrics between two M. tuberculosis strains
+        including length differences, GC content differences, and
+        contig count differences.
+        
         Args:
-            strain1: Name of first strain
-            strain2: Name of second strain
+            strain1: Name of first strain (e.g., "H37Rv")
+            strain2: Name of second strain (e.g., "CDC1551")
         
         Returns:
-            Dictionary with comparison results
+            Dictionary with comparison results containing:
+                - strain1: First strain name
+                - strain2: Second strain name
+                - length_difference: Absolute difference in total length
+                - length_ratio: Ratio of strain1 length to strain2 length
+                - gc_difference: Absolute difference in GC content
+                - contig_difference: Absolute difference in contig count
+                - stats1: Basic statistics for strain1
+                - stats2: Basic statistics for strain2
         """
         # Load genomes
         records1 = self.load_genome(strain1)
@@ -297,13 +375,16 @@ class GenomeAnalyzer:
     
     def generate_report(self, strain_names: List[str]) -> str:
         """
-        Generate a text report of genome analysis.
+        Generate a comprehensive text report of genome analysis.
+        
+        Creates a formatted report containing basic statistics for each strain
+        and comparative analysis between strains.
         
         Args:
             strain_names: List of strain names to analyze
-        
+            
         Returns:
-            Formatted report string
+            Formatted report string suitable for writing to file or printing.
         """
         report_lines = []
         report_lines.append("=" * 70)
@@ -365,9 +446,13 @@ class GenomeAnalyzer:
         """
         Save genome statistics to CSV files.
         
+        Creates individual CSV files for each strain and a combined CSV file
+        containing statistics for all analyzed strains.
+        
         Args:
             strain_names: List of strain names to analyze
-            output_dir: Directory to save CSV files (default: Results directory)
+            output_dir: Directory to save CSV files. If None, uses the
+                annotations directory.
         """
         if output_dir is None:
             output_dir = self.annotations_dir
@@ -401,7 +486,19 @@ class GenomeAnalyzer:
             print(f"✓ Saved combined statistics to {output_dir / 'all_strains_basic_stats.csv'}")
 
 def main():
-    """Command-line interface for genome analysis."""
+    """
+    Command-line interface for genome analysis.
+    
+    Usage:
+        python genome_analyzer.py   [--project-dir PROJECT_DIR]
+                                    [--strains STRAIN1 STRAIN2 ...]
+                                    [--output-report REPORT_FILE]
+                                    [--save-csv]
+    
+    Examples:
+        python genome_analyzer.py --strains H37Rv CDC1551 --save-csv
+        python genome_analyzer.py --output-report my_analysis.txt
+    """
     import argparse
     
     parser = argparse.ArgumentParser(

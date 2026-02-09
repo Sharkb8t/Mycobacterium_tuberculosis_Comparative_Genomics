@@ -3,7 +3,8 @@ Author: Dalton A. Schmidt
 GitHub: https://github.com/Sharkb8t
 
 Annotation file parsers for M. tuberculosis genomic data.
-Handles GFF3 and GBFF file formats to extract gene annotations.
+
+This module handles GFF3 and GBFF file formats to extract gene annotations, enabling functional analysis and variant annotation.
 """
 from pathlib import Path
 from Bio import SeqIO
@@ -15,14 +16,27 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class AnnotationParser:
-    """Parse and process genome annotation files (GFF3, GBFF)."""
+    """
+    Parse and process genome annotation files (GFF3, GBFF).
+    
+    This class provides methods to parse GFF3 and GBFF annotation files,
+    extract gene information, calculate gene statistics, compare annotations
+    between strains, and annotate variants with gene context.
+    
+    Attributes:
+        project_root (Path): Root directory of the project.
+        raw_dir (Path): Directory containing raw data files.
+        results_dir (Path): Directory for storing analysis results.
+        annotations_dir (Path): Directory for annotation files.
+    """
     
     def __init__(self, project_root: Optional[Path] = None):
         """
         Initialize the annotation parser.
         
         Args:
-            project_root: Path to project root directory
+            project_root: Path to project root directory. If None, attempts
+                to auto-detect project root.
         """
         if project_root is None:
             # Try to auto-detect project root
@@ -47,13 +61,35 @@ class AnnotationParser:
     
     def parse_gff3(self, strain_name: str) -> pd.DataFrame:
         """
-        Parse GFF3 annotation file.
+        Parse GFF3 annotation file for a given strain.
+        
+        Parses General Feature Format version 3 files to extract gene,
+        CDS, rRNA, and tRNA features with their attributes.
         
         Args:
-            strain_name: Name of the strain
+            strain_name: Name of the strain (e.g., "H37Rv", "CDC1551")
         
         Returns:
-            DataFrame with gene annotations
+            DataFrame with gene annotations containing columns:
+                - strain: Strain name
+                - seqid: Sequence identifier
+                - source: Annotation source
+                - type: Feature type (gene, CDS, rRNA, tRNA)
+                - start: Start position (1-based)
+                - end: End position (1-based)
+                - length: Feature length
+                - strand: Strand (+ or -)
+                - score: Feature score
+                - phase: Translation phase for CDS
+                - gene_id: Gene identifier
+                - name: Gene name
+                - product: Gene product description
+                - locus_tag: Locus tag
+                - gene_biotype: Type of gene (protein_coding, etc.)
+                - attributes: Raw attribute string
+        
+        Raises:
+            FileNotFoundError: If GFF3 file does not exist for the strain.
         """
         gff_file = self.raw_dir / f"{strain_name}_gff.gff"
         
@@ -125,13 +161,40 @@ class AnnotationParser:
     
     def parse_gbff(self, strain_name: str) -> pd.DataFrame:
         """
-        Parse GBFF (GenBank Flat File) annotation file.
+        Parse GBFF (GenBank Flat File) annotation file for a given strain.
+        
+        Uses Biopython's SeqIO to parse GenBank format files and extract
+        detailed gene information including protein translations and database
+        cross-references.
         
         Args:
-            strain_name: Name of the strain
+            strain_name: Name of the strain (e.g., "H37Rv", "CDC1551")
         
         Returns:
-            DataFrame with gene annotations
+            DataFrame with gene annotations containing columns:
+                - strain: Strain name
+                - seqid: Sequence identifier
+                - source: Annotation source (always "GenBank")
+                - type: Feature type (gene, CDS, rRNA, tRNA)
+                - start: Start position (1-based)
+                - end: End position (1-based)
+                - length: Feature length
+                - strand: Strand (+1 or -1)
+                - gene_id: Gene identifier
+                - name: Gene name
+                - locus_tag: Locus tag
+                - product: Gene product description
+                - protein_id: Protein identifier
+                - note: Additional notes
+                - function: Gene function
+                - db_xref: Database cross-references
+                - transl_table: Translation table used
+                - translation: Protein translation (for CDS features)
+                - pseudogene: Boolean indicating if feature is a pseudogene
+                - gene_biotype: Type of gene
+        
+        Raises:
+            FileNotFoundError: If GBFF file does not exist for the strain.
         """
         gbff_file = self.raw_dir / f"{strain_name}_gbff.gbff"
         
@@ -188,13 +251,16 @@ class AnnotationParser:
     def get_gene_annotations(self, strain_name: str) -> pd.DataFrame:
         """
         Get gene annotations from either GFF3 or GBFF file.
-        Prioritizes GFF3 if available, falls back to GBFF.
+        
+        Prioritizes GFF3 if available, falls back to GBFF. If neither file
+        exists or both fail to parse, returns an empty DataFrame.
         
         Args:
-            strain_name: Name of the strain
+            strain_name: Name of the strain (e.g., "H37Rv", "CDC1551")
         
         Returns:
-            DataFrame with gene annotations
+            DataFrame with gene annotations or empty DataFrame if no
+            annotations could be parsed.
         """
         try:
             # Try GFF3 first
@@ -213,13 +279,31 @@ class AnnotationParser:
     
     def calculate_gene_statistics(self, annotations_df: pd.DataFrame) -> Dict:
         """
-        Calculate statistics from gene annotations.
+        Calculate comprehensive statistics from gene annotations.
+        
+        Computes metrics such as gene counts, lengths, strand distribution,
+        gene density, and coding percentage.
         
         Args:
-            annotations_df: DataFrame with gene annotations
+            annotations_df: DataFrame with gene annotations as returned by
+                parse_gff3() or parse_gbff()
         
         Returns:
-            Dictionary with gene statistics
+            Dictionary with gene statistics containing:
+                - total_genes: Total number of gene features
+                - mean_gene_length: Average gene length in bp
+                - median_gene_length: Median gene length in bp
+                - total_coding_length: Sum of all gene lengths
+                - min_gene_length: Minimum gene length
+                - max_gene_length: Maximum gene length
+                - forward_strand_genes: Number of genes on forward strand
+                - reverse_strand_genes: Number of genes on reverse strand
+                - unique_gene_types: Number of unique gene types
+                - genes_with_product: Number of genes with product annotation
+                - pseudogenes: Number of pseudogenes
+                - gene_density: Genes per kilobase
+                - coding_percentage: Percentage of genome that is coding
+                - gene_type_distribution: Dictionary of counts by gene type
         """
         if annotations_df.empty:
             return {}
@@ -261,12 +345,26 @@ class AnnotationParser:
         """
         Compare gene annotations between two strains.
         
+        Identifies common genes, strain-specific genes, and calculates
+        gene similarity metrics between two M. tuberculosis strains.
+        
         Args:
-            strain1: Name of first strain
-            strain2: Name of second strain
+            strain1: Name of first strain (e.g., "H37Rv")
+            strain2: Name of second strain (e.g., "CDC1551")
         
         Returns:
-            Dictionary with comparison results
+            Dictionary with comparison results containing:
+                - strain1: First strain name
+                - strain2: Second strain name
+                - total_genes_strain1: Number of genes in strain1
+                - total_genes_strain2: Number of genes in strain2
+                - common_genes: Number of genes common to both strains
+                - unique_to_strain1: Number of genes unique to strain1
+                - unique_to_strain2: Number of genes unique to strain2
+                - common_genes_percentage: Percentage of strain1 genes that are common
+                - unique_genes_list_strain1: List of genes unique to strain1
+                - unique_genes_list_strain2: List of genes unique to strain2
+                - gene_similarity: Jaccard similarity coefficient for genes
         """
         # Get annotations for both strains
         annotations1 = self.get_gene_annotations(strain1)
@@ -323,14 +421,26 @@ class AnnotationParser:
     
     def annotate_variants(self, variants_df: pd.DataFrame, strain: str) -> pd.DataFrame:
         """
-        Annotate variants with gene information.
+        Annotate variants with gene information from a specific strain.
+        
+        Maps variant positions to gene annotations to determine if variants
+        are in gene regions and, if so, which genes they affect.
         
         Args:
-            variants_df: DataFrame with variants
-            strain: Strain name for annotation reference
+            variants_df: DataFrame containing variant data with at minimum
+                a 'position' column indicating genomic position.
+            strain: Strain name for annotation reference (e.g., "H37Rv")
         
         Returns:
-            DataFrame with annotated variants
+            DataFrame with annotated variants containing original columns plus:
+                - gene_annotation: Gene name or "Intergenic"
+                - gene_product: Gene product description
+                - in_gene_region: Boolean indicating if variant is in gene region
+                - gene_start: Start position of overlapping gene
+                - gene_end: End position of overlapping gene
+                - gene_strand: Strand of overlapping gene
+                - gene_type: Type of overlapping gene feature
+                - cds_position: Position within CDS (if applicable)
         """
         if variants_df.empty:
             return variants_df
@@ -404,7 +514,18 @@ class AnnotationParser:
 
 
 def main():
-    """Command-line interface for annotation parsing."""
+    """
+    Command-line interface for annotation parsing.
+    
+    Usage:
+        python annotation_parser.py [--project-dir PROJECT_DIR]
+                                    [--strains STRAIN1 STRAIN2 ...]
+                                    [--parse-all] [--compare]
+    
+    Examples:
+        python annotation_parser.py --parse-all
+        python annotation_parser.py --compare --strains H37Rv CDC1551
+    """
     import argparse
     
     parser = argparse.ArgumentParser(

@@ -18,14 +18,30 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class IntegratedAnalysis:
-    """Integrated analysis pipeline for M. tuberculosis genomics."""
+    """
+    Integrated analysis pipeline for M. tuberculosis genomics.
+    
+    This class orchestrates the complete analysis workflow by integrating
+    three main analysis modules:
+    1. GenomeAnalyzer: Basic genome statistics and comparisons
+    2. AnnotationParser: Gene annotation parsing and analysis
+    3. ComparativeAlignment: Whole genome alignment and variant analysis
+    
+    Attributes:
+        - project_root (Path): Root directory of the project.
+        - raw_dir (Path): Directory containing raw data files.
+        - results_dir (Path): Directory for storing analysis results.
+        - genome_analyzer (GenomeAnalyzer): Instance for genome analysis.
+        - annotation_parser (AnnotationParser): Instance for annotation parsing.
+        - comparative_analysis (ComparativeAlignment): Instance for comparative analysis.
+    """
     
     def __init__(self, project_root=None):
         """
         Initialize the integrated analysis pipeline.
         
         Args:
-            project_root: Path to project root directory
+            project_root: Path to project root directory. If None, uses the parent directory of the current working directory.
         """
         if project_root is None:
             self.project_root = Path.cwd().parent
@@ -48,8 +64,17 @@ class IntegratedAnalysis:
         """
         Run complete integrated analysis pipeline.
         
+        Executes the analysis in four phases:
+        1. Genome Statistics: Basic genome characteristics and comparisons
+        2. Annotation Analysis: Gene annotation parsing and comparison
+        3. Comparative Analysis: Alignment, variant calling, and annotation
+        4. Report Generation: Comprehensive integrated report
+        
         Args:
-            strains: List of strain names to analyze
+            strains: List of strain names to analyze (default: ['H37Rv', 'CDC1551'])
+        
+        Returns:
+            dict: Nested dictionary containing all analysis results organized by phase.
         """
         print("=" * 80)
         print("INTEGRATED M. TUBERCULOSIS GENOMICS PIPELINE")
@@ -84,7 +109,15 @@ class IntegratedAnalysis:
         return results
     
     def run_genome_analysis(self, strains):
-        """Run genome statistics analysis."""
+        """
+        Run genome statistics analysis for specified strains.
+        
+        Args:
+            strains: List of strain names to analyze.
+        
+        Returns:
+            dict: Dictionary containing genome statistics for each strain and comparison results if multiple strains are analyzed.
+        """
         stats = {}
         
         for strain in strains:
@@ -114,7 +147,15 @@ class IntegratedAnalysis:
         return stats
     
     def run_annotation_analysis(self, strains):
-        """Run annotation analysis."""
+        """
+        Run annotation analysis for specified strains.
+        
+        Args:
+            strains: List of strain names to analyze.
+        
+        Returns:
+            dict: Dictionary containing gene annotation statistics for each strain and comparison results if multiple strains are analyzed.
+        """
         stats = {}
         
         for strain in strains:
@@ -147,7 +188,19 @@ class IntegratedAnalysis:
         return stats
     
     def run_comparative_analysis(self, strains):
-        """Run comparative genomics analysis."""
+        """
+        Run comparative genomics analysis between strains.
+        
+        Note: This analysis assumes H37Rv as the reference strain and
+        CDC1551 as the query strain when two strains are provided.
+        
+        Args:
+            strains: List of strain names to analyze (requires at least 2).
+        
+        Returns:
+            dict: Dictionary containing comparative analysis results including
+                alignment statistics, variant statistics, and annotation statistics.
+        """
         print("\nRunning comparative analysis...")
         
         # This will run the enhanced analysis from alignment_analysis.py
@@ -182,7 +235,20 @@ class IntegratedAnalysis:
         return {}
     
     def generate_master_report(self, results, strains):
-        """Generate comprehensive master report."""
+        """
+        Generate comprehensive master report integrating all analysis results.
+        
+        Creates a detailed markdown report containing:
+        - Executive summary
+        - Detailed results from all analysis phases
+        - Biological insights and interpretations
+        - Technical implementation details
+        - Recommendations for further analysis
+        
+        Args:
+            results: Dictionary containing all analysis results from the pipeline.
+            strains: List of strain names analyzed.
+        """
         from datetime import datetime
         
         report_content = f"""# INTEGRATED M. TUBERCULOSIS GENOMICS ANALYSIS REPORT
@@ -354,7 +420,17 @@ This integrated analysis provides a comprehensive view of M. tuberculosis genomi
 
 
 def main():
-    """Command-line interface for integrated analysis."""
+    """
+    Command-line interface for integrated analysis pipeline.
+    
+    Usage:
+        python integrated_analysis.py   [--project-dir PROJECT_DIR]
+                                        [--strains STRAIN1 STRAIN2 ...]
+    
+    Examples:
+        python integrated_analysis.py --strains H37Rv CDC1551
+        python integrated_analysis.py --project-dir /path/to/project
+    """
     import argparse
     
     parser = argparse.ArgumentParser(

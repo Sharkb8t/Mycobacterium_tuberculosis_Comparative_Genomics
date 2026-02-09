@@ -14,12 +14,32 @@ import argparse
 from pathlib import Path
 from tqdm import tqdm
 from Bio import SeqIO
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction as GC
 import warnings
 warnings.filterwarnings('ignore')
 
 class MTBDataDownloader:
+    """
+    Download and process Mycobacterium tuberculosis genome data from NCBI.
+    
+    This class handles downloading of FASTA, GFF3, and GenBank files for
+    M. tuberculosis strains, file decompression, integrity verification,
+    and organization of the downloaded data.
+    
+    Attributes:
+        project_root (Path): Root directory of the project.
+        raw_data_dir (Path): Directory for storing raw downloaded data.
+        processed_data_dir (Path): Directory for processed data (not used in current implementation).
+        genome_urls (dict): Dictionary containing download URLs for each strain and file type.
+    """
     def __init__(self, project_root=None):
+        """
+        Initialize the MTBDataDownloader object.
+        
+        Args:
+            project_root (str or Path, optional): Path to project root directory.
+                If None, uses the parent directory of the script's location.
+        """
         if project_root is None:
             # Get the project root (parent directory of Scripts)
             self.project_root = Path(__file__).parent.parent
@@ -49,7 +69,19 @@ class MTBDataDownloader:
         }
     
     def download_file(self, url, output_path):
-        """Download a file with progress bar."""
+        """
+        Download a file from a URL with progress bar visualization.
+        
+        Args:
+            url (str): URL of the file to download.
+            output_path (Path): Local path where the file should be saved.
+        
+        Returns:
+            Path: Path to the downloaded file.
+            
+        Raises:
+            requests.exceptions.RequestException: If the download fails.
+        """
         response = requests.get(url, stream=True)
         total_size = int(response.headers.get('content-length', 0))
         
@@ -64,10 +96,22 @@ class MTBDataDownloader:
         return output_path
     
     def decompress_file(self, compressed_path, output_path):
-        """Decompress .gz file."""
-        with gzip.open(compressed_path, 'rb') as f_in:
-            with open(output_path, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        """
+        Decompress a .gz compressed file.
+        
+        Args:
+            compressed_path (Path): Path to the compressed .gz file.
+            output_path (Path): Path where the decompressed file should be saved.
+        
+        Returns:
+            Path: Path to the decompressed file.
+            
+        Note:
+            Removes the compressed file after successful decompression.
+        """
+        with gzip.open(compressed_path, 'rt') as f_in:
+            with open(output_path, 'w') as f_out:
+                f_out.write(f_in.read())
         print(f"  Decompressed to: {output_path.name}")
         
         # Remove the compressed file
@@ -75,7 +119,19 @@ class MTBDataDownloader:
         return output_path
     
     def verify_genome_file(self, file_path):
-        """Verify genome file integrity and get basic stats."""
+        """
+        Verify genome file integrity and calculate basic statistics.
+        
+        Args:
+            file_path (Path): Path to the genome file (FASTA format).
+        
+        Returns:
+            dict: Dictionary containing file validation results and statistics:
+                - status: "valid", "empty", or "error: [error message]"
+                - records: Number of sequence records in the file
+                - total_length: Total length of all sequences in base pairs
+                - gc_content: Average GC content as a percentage
+        """
         try:
             records = list(SeqIO.parse(file_path, "fasta"))
             if len(records) > 0:
@@ -93,7 +149,17 @@ class MTBDataDownloader:
             return {"status": f"error: {str(e)}"}
     
     def download_all_genomes(self):
-        """Download and process all genome files."""
+        """
+        Download and process all genome files for all strains.
+        
+        Downloads FASTA, GFF3, and GenBank files for each strain defined in
+        genome_urls, decompresses them, verifies integrity, and organizes
+        them in the raw data directory.
+        
+        Returns:
+            dict: Nested dictionary containing download results for each strain
+                and file type. Each entry contains the status of the download.
+        """
         print("=" * 70)
         print("Mycobacterium tuberculosis Comparative Genomics - Data Download")
         print("=" * 70)
@@ -152,7 +218,13 @@ class MTBDataDownloader:
         return results
     
     def print_summary(self, results):
-        """Print download summary."""
+        """
+        Print a formatted summary of download results.
+        
+        Args:
+            results (dict): Download results dictionary as returned by
+                download_all_genomes().
+        """
         print("\n" + "=" * 70)
         print("DOWNLOAD SUMMARY")
         print("=" * 70)
@@ -166,7 +238,12 @@ class MTBDataDownloader:
                     print(f"  ✗ {file_type}: {status}")
     
     def generate_data_readme(self):
-        """Generate a README file for the data directory."""
+        """
+        Generate a README.md file describing the downloaded data.
+        
+        Creates a comprehensive README file in the raw data directory
+        explaining the file formats, data sources, and usage.
+        """
         readme_content = """# Mycobacterium tuberculosis Genome Data
 
 ## Files Description
@@ -212,6 +289,12 @@ These files serve as the basis for comparative genomics analysis including:
         print(f"\n✓ Data README generated: {readme_path}")
 
 def main():
+    """
+    Command-line interface for downloading M. tuberculosis genome data.
+    
+    Usage:
+        python download_data.py [--project-root PROJECT_ROOT]
+    """
     parser = argparse.ArgumentParser(description="Download M. tuberculosis genome data")
     parser.add_argument('--project-root', type=str, default=None,
                     help='Path to project root directory')
